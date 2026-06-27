@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LifeOS · Dispatch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDEAE3; --surface:#FFFFFF; --surface-2:#F7F5F1;
+    --ink:#1B1A17; --muted:#6F6A60; --line:#E4E0D7;
+    --hot:#E8521E; --cool:#1F7A5A; --amber:#C9962E; --low:#9A958A;
+    --shadow:0 1px 0 rgba(27,26,23,.04), 0 18px 40px -28px rgba(27,26,23,.45);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:Inter,system-ui,sans-serif; line-height:1.5;
+    padding:28px 22px 64px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  .mono{font-family:"JetBrains Mono",monospace;font-variant-ligatures:none}
+  .eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted)}
+
+  /* Header */
+  header.top{display:flex;justify-content:space-between;align-items:flex-end;
+    gap:18px;border-bottom:1.5px solid var(--ink);padding-bottom:14px;flex-wrap:wrap}
+  .brand{display:flex;align-items:baseline;gap:12px}
+  .brand h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+    font-size:30px;letter-spacing:-.02em;margin:0;line-height:1}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--hot);
+    display:inline-block;transform:translateY(-2px)}
+  .top .right{text-align:right;display:flex;flex-direction:column;gap:3px}
+  .top .right .num{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;
+    font-size:13px;letter-spacing:.04em}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;margin-top:22px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow)}
+  .today{padding:24px 26px;position:relative;overflow:hidden}
+  .today .tab{position:absolute;top:0;right:26px;background:var(--ink);color:#fff;
+    font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;
+    padding:5px 10px;border-radius:0 0 7px 7px}
+  .today .day{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+    font-size:46px;line-height:.95;letter-spacing:-.02em;margin:6px 0 2px}
+  .today .date{color:var(--muted);font-size:14px}
+  .today .ringrow{display:flex;align-items:center;gap:20px;margin-top:20px}
+  .ring{flex:0 0 auto}
+  .ring .track{stroke:var(--line)}
+  .ring .val{stroke:var(--hot);stroke-linecap:round;
+    transition:stroke-dashoffset 1.1s cubic-bezier(.2,.7,.2,1)}
+  .ring .pct{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;
+    font-size:21px;fill:var(--ink)}
+  .ring .pctlbl{font-family:"JetBrains Mono",monospace;font-size:8px;fill:var(--muted);
+    letter-spacing:.1em}
+  .pep{font-size:14.5px}
+  .pep b{font-family:"Bricolage Grotesque",sans-serif}
+  .pep .sub{color:var(--muted);font-size:13px;margin-top:3px}
+
+  .focus{padding:22px 24px}
+  .focus h2,.col h2,.band h2{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;
+    font-size:13px;letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;
+    gap:9px;text-transform:uppercase}
+  .focus h2::before{content:"";width:7px;height:7px;background:var(--hot);border-radius:2px}
+  .fitem{display:flex;gap:12px;align-items:flex-start;padding:11px 0;
+    border-top:1px solid var(--line);cursor:pointer}
+  .fitem:first-of-type{border-top:none}
+  .box{flex:0 0 auto;width:18px;height:18px;border:1.6px solid var(--ink);border-radius:6px;
+    margin-top:1px;display:grid;place-items:center;transition:.15s}
+  .box svg{width:11px;height:11px;opacity:0;transition:.15s}
+  .fitem.struck .box{background:var(--cool);border-color:var(--cool)}
+  .fitem.struck .box svg{opacity:1}
+  .fitem.struck .ft{text-decoration:line-through;color:var(--muted)}
+  .ft{font-weight:500;font-size:15px}
+  .fmeta{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);margin-top:2px}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:14px;font-style:italic}
+
+  /* Stat strip */
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:18px}
+  .stat{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+    padding:14px 14px 12px}
+  .stat .n{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:26px;
+    line-height:1}
+  .stat .l{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);margin-top:5px}
+  .stat.alert .n{color:var(--hot)}
+  .stat.good .n{color:var(--cool)}
+
+  /* Section heading (shared) */
+  .sec-h{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:13px;
+    letter-spacing:.02em;margin:0 0 14px;display:flex;align-items:center;gap:9px;
+    text-transform:uppercase}
+  .sec-h::before{content:"";width:7px;height:7px;background:var(--ink);border-radius:2px}
+
+  /* Planner (weekly + jumper) */
+  .planner{padding:22px 24px;margin-top:18px}
+  .planner .sec-h::before{background:var(--cool)}
+  .pcontrols{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .navbtn{font-family:"JetBrains Mono",monospace;font-size:12px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);border-radius:9px;padding:7px 12px;
+    cursor:pointer;transition:.15s;line-height:1}
+  .navbtn:hover{border-color:var(--ink)}
+  .navbtn.solid{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .wklabel{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;
+    min-width:172px;text-align:center}
+  .pspacer{flex:1 1 auto;min-width:8px}
+  .jump{display:flex;align-items:center;gap:7px}
+  .jump label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted)}
+  .jump input[type=date]{font-family:"JetBrains Mono",monospace;font-size:12px;
+    border:1px solid var(--line);background:var(--surface);border-radius:9px;
+    padding:6px 9px;color:var(--ink)}
+
+  .weekgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .daycol{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+    padding:9px 9px 11px;min-height:118px;display:flex;flex-direction:column}
+  .daycol.today{border-color:var(--hot);box-shadow:0 0 0 1px var(--hot) inset}
+  .daycol.sel{border-color:var(--cool);box-shadow:0 0 0 2px var(--cool) inset}
+  .dayhd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px}
+  .dayhd .dw{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted)}
+  .dayhd .dn{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:16px;line-height:1}
+  .daycol.today .dn{color:var(--hot)}
+  .dtask{display:flex;gap:6px;align-items:flex-start;font-size:11.5px;line-height:1.3;
+    margin-top:6px}
+  .dtask .pri{flex:0 0 auto;width:6px;height:6px;border-radius:50%;margin-top:4px}
+  .dtask.done span:last-child{text-decoration:line-through;color:var(--muted)}
+  .dempty{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--low);
+    margin-top:auto;padding-top:6px}
+  .daycount{font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--muted)}
+  .selbanner{margin-top:14px;background:var(--surface-2);border:1px solid var(--line);
+    border-left:3px solid var(--cool);border-radius:10px;padding:12px 14px}
+  .selbanner h3{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:13px;
+    margin:0 0 8px}
+  .selbanner .row{padding:7px 0}
+
+  /* Columns */
+  .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+  .col{padding:20px 20px 8px}
+  .col.overdue h2::before{content:"";width:7px;height:7px;background:var(--hot);border-radius:50%}
+  .col.due h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:50%}
+  .col.week h2::before{content:"";width:7px;height:7px;background:var(--ink);border-radius:50%}
+  .row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none}
+  .pri{flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:6px}
+  .pri.high{background:var(--hot)} .pri.med{background:var(--amber)} .pri.low{background:var(--low)}
+  .rt{font-size:14px;font-weight:500;line-height:1.35}
+  .rmeta{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:2px;
+    display:flex;gap:8px;flex-wrap:wrap}
+  .tag{color:var(--muted)}
+  .flw{color:var(--hot)}
+  .empty{color:var(--muted);font-size:13px;padding:8px 0 16px}
+
+  /* Bands */
+  .band{padding:22px 24px;margin-top:16px}
+  .band.followups h2::before{content:"";width:7px;height:7px;background:var(--cool);border-radius:2px}
+  .band.ideas h2::before{content:"";width:7px;height:7px;background:var(--amber);border-radius:2px}
+  .flist{display:grid;grid-template-columns:1fr 1fr;gap:2px 26px}
+  .fl{display:flex;gap:11px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
+  .fl .who{font-weight:600;font-size:14px;min-width:74px}
+  .fl .what{font-size:14px;color:var(--ink)}
+  .fl .when{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);
+    white-space:nowrap}
+  .ideas .ilist{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .idea{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:14px 15px}
+  .idea .it{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px}
+  .idea .inote{font-size:13px;color:var(--muted);margin-top:4px}
+  .idea .icap{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--low);margin-top:8px}
+
+  footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
+  footer .mono{font-size:11px}
+
+  a:focus-visible,.fitem:focus-visible{outline:2px solid var(--hot);outline-offset:3px;border-radius:4px}
+
+  @media (max-width:880px){
+    .hero{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .cols{grid-template-columns:1fr}
+    .flist{grid-template-columns:1fr}
+    .ideas .ilist{grid-template-columns:1fr}
+    .weekgrid{grid-template-columns:repeat(7,1fr);gap:5px}
+    .daycol{padding:7px 6px 9px;min-height:96px}
+    .dtask{font-size:10.5px}
+  }
+  @media (max-width:620px){
+    .weekgrid{grid-template-columns:repeat(2,1fr)}
+    .daycol{min-height:auto}
+    .pspacer{display:none}
+    .pcontrols{gap:8px}
+  }
+  @media (max-width:480px){ .stats{grid-template-columns:repeat(2,1fr)} body{padding:20px 14px 48px} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+<div id="lifeos-gate" style="position:fixed;inset:0;z-index:99999;background:#EDEAE3;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,'Segoe UI',sans-serif">
+  <div style="background:#fff;border:1px solid #E4E0D7;border-radius:14px;padding:30px 28px;max-width:300px;width:88%;box-shadow:0 18px 40px -28px rgba(27,26,23,.45);text-align:center">
+    <div style="font-weight:800;font-size:22px;letter-spacing:-.02em">LifeOS</div>
+    <div style="color:#6F6A60;font-size:13px;margin:6px 0 18px">Enter your code to continue</div>
+    <input id="lifeos-pass" type="password" inputmode="numeric" autocomplete="off" placeholder="••••"
+      style="width:100%;text-align:center;font-size:20px;letter-spacing:.3em;padding:11px;border:1px solid #E4E0D7;border-radius:9px;outline:none">
+    <button id="lifeos-go" style="margin-top:12px;width:100%;background:#1B1A17;color:#fff;border:none;border-radius:9px;padding:11px;font-size:15px;font-weight:600;cursor:pointer">Unlock</button>
+    <div id="lifeos-err" style="color:#E8521E;font-size:12px;height:16px;margin-top:8px"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var CODE="5791";
+  function open(){var g=document.getElementById('lifeos-gate'); if(g) g.remove();}
+  try{ if(sessionStorage.getItem('lifeos_ok')==='1'){ open(); return; } }catch(e){}
+  function go(){
+    var v=document.getElementById('lifeos-pass').value.trim();
+    if(v===CODE){ try{sessionStorage.setItem('lifeos_ok','1');}catch(e){} open(); }
+    else{ document.getElementById('lifeos-err').textContent='Incorrect code'; }
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    var b=document.getElementById('lifeos-go'), p=document.getElementById('lifeos-pass');
+    b.addEventListener('click',go);
+    p.addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
+    p.focus();
+  });
+})();
+</script>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot"></span><h1>LifeOS</h1>
+      <span class="eyebrow" style="transform:translateY(-3px)">daily dispatch</span></div>
+    <div class="right">
+      <span class="num mono" id="dispatchNo">DISPATCH</span>
+      <span class="eyebrow" id="syncedAt">synced —</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="card today">
+      <span class="tab mono" id="ownerTab">OWNER</span>
+      <div class="eyebrow">today</div>
+      <div class="day" id="weekday">—</div>
+      <div class="date mono" id="fulldate">—</div>
+      <div class="ringrow">
+        <svg class="ring" width="96" height="96" viewBox="0 0 96 96" aria-hidden="true">
+          <circle class="track" cx="48" cy="48" r="40" fill="none" stroke-width="9"/>
+          <circle class="val" id="ringVal" cx="48" cy="48" r="40" fill="none" stroke-width="9"
+            transform="rotate(-90 48 48)" stroke-dasharray="251.3" stroke-dashoffset="251.3"/>
+          <text class="pct" id="ringPct" x="48" y="46" text-anchor="middle">0%</text>
+          <text class="pctlbl" x="48" y="60" text-anchor="middle">DONE</text>
+        </svg>
+        <div class="pep">
+          <b id="pepTitle">Let's get the day moving.</b>
+          <div class="sub" id="pepSub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card focus">
+      <h2>Today's focus</h2>
+      <div id="focusList"></div>
+      <div class="hint">Tick to clear it from view. To log it for real, just tell Claude “done”.</div>
+    </div>
+  </section>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="card planner">
+    <h2 class="sec-h">Weekly plan</h2>
+    <div class="pcontrols">
+      <button class="navbtn" id="prevWk" aria-label="Previous week">◀ Prev</button>
+      <span class="wklabel" id="wkLabel">—</span>
+      <button class="navbtn" id="nextWk" aria-label="Next week">Next ▶</button>
+      <button class="navbtn solid" id="thisWk">This week</button>
+      <span class="pspacer"></span>
+      <span class="jump">
+        <label for="jumpDate">Jump to date</label>
+        <input type="date" id="jumpDate">
+      </span>
+    </div>
+    <div class="weekgrid" id="weekGrid"></div>
+    <div id="selBanner"></div>
+  </section>
+
+  <section class="cols">
+    <div class="card col overdue"><h2>Overdue</h2><div id="overdue"></div></div>
+    <div class="card col due"><h2>Due today</h2><div id="dueToday"></div></div>
+    <div class="card col week"><h2>Next 7 days</h2><div id="thisWeek"></div></div>
+  </section>
+
+  <section class="card band followups">
+    <h2>Follow-ups</h2><div class="flist" id="followups"></div>
+  </section>
+
+  <section class="card band ideas">
+    <h2>Idea parking lot</h2><div class="ilist" id="ideas"></div>
+  </section>
+
+  <footer>
+    Captured by you · organized by Claude Cowork ·
+    <span class="mono">talk to refresh — no editing required</span>
+  </footer>
+</div>
+
+<!-- Live data, written by Claude. Loads if present and overrides the sample below. -->
+<script>
+/* Auto-generated by Claude Cowork from tasks.md, ideas.md, and meetings/.
+   You don't edit this — Claude rewrites it whenever your tasks change. */
+window.LIFEOS_DATA = {
+  owner: "Ayush",
+  generated: "2026-06-27T01:38",
+  focus: [
+    { title: "Prepare and approve final salary sheet", project: "finance", due: "2026-06-27", done: false },
+    { title: "Plan final operations flow for Rakesh Ji wedding", project: "rakesh-wedding", due: "2026-06-27", done: false },
+    { title: "Create final operations flow for Asha Ji wedding (manpower, cutlery, crockery, menu tags, display)", project: "asha-wedding", due: "2026-06-27", done: false }
+  ],
+  tasks: [
+    { title: "Follow up with GoKhana for payments", project: "gokhana", priority: "high", due: "2026-06-27", status: "todo", followup: true },
+    { title: "Follow up with GoKhana for Capgemini equipment", project: "gokhana", priority: "high", due: "2026-06-27", status: "todo", followup: true },
+    { title: "Place dry fruits order", project: "procurement", priority: "med", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Check washroom status at Whitefield outlet", project: "whitefield", priority: "med", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Plan for Saturday", project: "planning", priority: "med", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Source South Indian chef to start the cuisine at Whitefield", project: "whitefield", priority: "high", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Implement and start juice counter at Whitefield", project: "whitefield", priority: "med", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Plan final operations flow for Rakesh Ji wedding", project: "rakesh-wedding", priority: "high", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Create calendar spot for Rakesh Ji tasting", project: "rakesh-wedding", priority: "med", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Create final operations flow for Asha Ji wedding (manpower, cutlery, crockery, menu tags, display)", project: "asha-wedding", priority: "high", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Mardi Gras event - final menu, operations flow, logistics", project: "mardigras", priority: "high", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Prepare and approve final salary sheet", project: "finance", priority: "high", due: "2026-06-27", status: "todo", followup: false },
+    { title: "Increase pricing on North Indian cuisine and promote it", project: "marketing", priority: "med", due: "2026-06-27", status: "todo", followup: false }
+  ],
+  followups: [
+    { who: "GoKhana", what: "Payments owed - follow up", due: "2026-06-27", channel: "call" },
+    { who: "GoKhana", what: "Capgemini equipment - follow up", due: "2026-06-27", channel: "call" }
+  ],
+  ideas: [],
+  meetings: []
+};
+
+</script>
+<script>
+/* Fallback sample so the file renders even without data.js next to it.
+   In your folder, data.js (written by Cowork) overrides this. */
+const SAMPLE = {owner:"You",generated:"2026-06-11T07:30",
+ focus:[{title:"Reply to vendor on pricing",project:"ops",due:"2026-06-10",done:false},
+ {title:"Send referral one-pager to Arjun",project:"growth",due:"2026-06-11",done:false},
+ {title:"Finish Q2 deck for team review",project:"work",due:"2026-06-13",done:false}],
+ tasks:[{title:"Reply to vendor on pricing",project:"ops",priority:"med",due:"2026-06-10",status:"todo",followup:true},
+ {title:"Send referral one-pager to Arjun",project:"growth",priority:"med",due:"2026-06-11",status:"todo",followup:true},
+ {title:"Call the bank about the account limit",project:"personal",priority:"med",due:"2026-06-12",status:"todo",followup:false},
+ {title:"Finish Q2 deck for team review",project:"work",priority:"high",due:"2026-06-13",status:"doing",followup:false},
+ {title:"Review Priya's contract",project:"clientX",priority:"high",due:"2026-06-15",status:"todo",followup:true},
+ {title:"Book dentist appointment",project:"personal",priority:"low",due:"2026-06-18",status:"todo",followup:false},
+ {title:"Outline blog post on capture habits",project:"content",priority:"low",due:"2026-06-20",status:"todo",followup:false},
+ {title:"Pay June rent",project:"personal",priority:"high",due:"2026-06-11",status:"done",followup:false},
+ {title:"Confirm Thursday standup agenda",project:"work",priority:"med",due:"2026-06-11",status:"done",followup:false}],
+ followups:[{who:"Priya",what:"Signed contract",due:"2026-06-13",channel:"email"},
+ {who:"Arjun",what:"Feedback on referral one-pager",due:"2026-06-12",channel:"message"},
+ {who:"Vendor",what:"Revised pricing reply owed",due:"2026-06-10",channel:"email"}],
+ ideas:[{title:"Referral program",note:"Credit users for invites; test with 20 first",captured:"2026-06-11"},
+ {title:"Weekly shipped review",note:"15 min Friday momentum ritual",captured:"2026-06-10"},
+ {title:"Voice-note capture",note:"Dump ideas from phone, Claude files them",captured:"2026-06-09"}],
+ meetings:[]};
+
+const D = window.LIFEOS_DATA || SAMPLE;
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const today = D.generated.slice(0,10);
+const toN = d => { const [y,m,dd]=d.split('-').map(Number); return Date.UTC(y,m-1,dd)/864e5; };
+const T = toN(today);
+const DAY = 864e5;
+const isoFromN = n => new Date(n*DAY).toISOString().slice(0,10);
+const fmtDue = d => { const diff = toN(d)-T;
+  if(diff<0) return diff===-1?"yesterday":Math.abs(diff)+"d ago";
+  if(diff===0) return "today"; if(diff===1) return "tomorrow";
+  return "in "+diff+"d"; };
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const labelN = n => { const d=new Date(n*DAY); return MO[d.getUTCMonth()]+' '+d.getUTCDate(); };
+
+// header
+const dno = String(Math.floor((T)%1000)).padStart(3,'0');
+document.getElementById('dispatchNo').textContent = "DISPATCH №"+dno;
+document.getElementById('syncedAt').textContent = "synced "+D.generated.slice(11)+" · "+today;
+document.getElementById('ownerTab').textContent = (D.owner||"OWNER").toUpperCase();
+const dObj = new Date(today+"T00:00:00");
+document.getElementById('weekday').textContent =
+  dObj.toLocaleDateString('en-US',{weekday:'long'});
+document.getElementById('fulldate').textContent =
+  dObj.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+// buckets
+const open = D.tasks.filter(t=>t.status!=='done');
+const overdue = open.filter(t=>toN(t.due)<T).sort((a,b)=>toN(a.due)-toN(b.due));
+const dueToday = open.filter(t=>toN(t.due)===T);
+const thisWeek = open.filter(t=>{const x=toN(t.due);return x>T && x<=T+7;}).sort((a,b)=>toN(a.due)-toN(b.due));
+const doneToday = D.tasks.filter(t=>t.status==='done' && toN(t.due)===T);
+
+// ring
+const planned = overdue.length+dueToday.length+doneToday.length;
+const pct = planned? Math.round(doneToday.length/planned*100):0;
+const C=251.3;
+document.getElementById('ringVal').setAttribute('stroke-dashoffset', C*(1-pct/100));
+document.getElementById('ringPct').textContent = pct+"%";
+const pepT=document.getElementById('pepTitle'), pepS=document.getElementById('pepSub');
+if(planned===0){pepT.textContent="Clear runway.";pepS.textContent="Nothing scheduled — pull something forward or rest.";}
+else if(pct>=100){pepT.textContent="Day cleared. ";pepS.textContent="Everything planned for today is done.";}
+else if(pct>=50){pepT.textContent="Strong momentum.";pepS.textContent=doneToday.length+" done · "+(planned-doneToday.length)+" to go today.";}
+else {pepT.textContent="Top of the day.";pepS.textContent=(planned-doneToday.length)+" to clear · start with your focus list.";}
+
+// focus
+document.getElementById('focusList').innerHTML = D.focus.map((f,i)=>`
+  <div class="fitem" tabindex="0" role="button" data-i="${i}">
+    <span class="box"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 6" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><div class="ft">${esc(f.title)}</div>
+    <div class="fmeta">${f.project?'#'+esc(f.project)+' · ':''}due ${fmtDue(f.due)}</div></div>
+  </div>`).join('') || '<div class="empty">No focus set. Ask Claude to build today.</div>';
+document.querySelectorAll('.fitem').forEach(el=>{
+  const toggle=()=>el.classList.toggle('struck');
+  el.addEventListener('click',toggle);
+  el.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();}});
+});
+
+// stats
+const stats=[
+  {n:overdue.length,l:"Overdue",c:overdue.length?"alert":""},
+  {n:dueToday.length,l:"Due today",c:""},
+  {n:thisWeek.length,l:"Next 7 days",c:""},
+  {n:D.followups.length,l:"Follow-ups",c:""},
+  {n:D.ideas.length,l:"Ideas",c:""},
+  {n:doneToday.length,l:"Done today",c:doneToday.length?"good":""}];
+document.getElementById('stats').innerHTML = stats.map(s=>`
+  <div class="stat ${s.c}"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('');
+
+// ---- Weekly planner + jump-to-date ----
+const mondayOf = n => { const d=new Date(n*DAY); const wd=(d.getUTCDay()+6)%7; return n-wd; };
+const tasksOn = n => D.tasks.filter(t=>toN(t.due)===n).sort((a,b)=>{
+  const r={high:0,med:1,low:2}; return (r[a.priority]??3)-(r[b.priority]??3);});
+let weekStart = mondayOf(T);
+let selDay = null;
+
+function renderWeek(){
+  const wkEnd = weekStart+6;
+  document.getElementById('wkLabel').textContent =
+    labelN(weekStart)+' – '+labelN(wkEnd)+', '+new Date(wkEnd*DAY).getUTCFullYear();
+  let html='';
+  for(let i=0;i<7;i++){
+    const n=weekStart+i, list=tasksOn(n);
+    const d=new Date(n*DAY);
+    const cls=['daycol']; if(n===T)cls.push('today'); if(n===selDay)cls.push('sel');
+    const items = list.length ? list.map(t=>`
+      <div class="dtask ${t.status==='done'?'done':''}">
+        <span class="pri ${t.priority}"></span><span>${esc(t.title)}</span></div>`).join('')
+      : '<div class="dempty">—</div>';
+    html+=`<div class="daycol ${cls.join(' ')}" data-n="${n}">
+      <div class="dayhd"><span class="dw">${WD[d.getUTCDay()]}</span>
+        <span class="dn">${d.getUTCDate()}</span></div>
+      ${list.length?`<div class="daycount">${list.length} task${list.length>1?'s':''}</div>`:''}
+      ${items}</div>`;
+  }
+  document.getElementById('weekGrid').innerHTML=html;
+  document.querySelectorAll('.daycol').forEach(el=>{
+    el.addEventListener('click',()=>{ selDay=Number(el.dataset.n);
+      document.getElementById('jumpDate').value=isoFromN(selDay); renderWeek(); renderBanner(); });
+  });
+}
+
+function renderBanner(){
+  const el=document.getElementById('selBanner');
+  if(selDay===null){ el.innerHTML=''; return; }
+  const list=tasksOn(selDay);
+  const d=new Date(selDay*DAY);
+  const title=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const rows = list.length ? list.map(t=>`
+    <div class="row"><span class="pri ${t.priority}"></span>
+      <div><div class="rt">${esc(t.title)}${t.status==='done'?' ✓':''}</div>
+      <div class="rmeta">${t.project?`<span class="tag">#${esc(t.project)}</span>`:''}
+        <span>${esc(t.priority)}</span>
+        ${t.followup?`<span class="flw">↳ follow-up</span>`:''}</div></div></div>`).join('')
+    : '<div class="empty">No tasks due this day.</div>';
+  el.innerHTML=`<div class="selbanner"><h3>${title}</h3>${rows}</div>`;
+}
+
+document.getElementById('prevWk').onclick=()=>{weekStart-=7;renderWeek();};
+document.getElementById('nextWk').onclick=()=>{weekStart+=7;renderWeek();};
+document.getElementById('thisWk').onclick=()=>{weekStart=mondayOf(T);selDay=null;
+  document.getElementById('jumpDate').value='';renderWeek();renderBanner();};
+document.getElementById('jumpDate').addEventListener('change',e=>{
+  if(!e.target.value){selDay=null;renderBanner();renderWeek();return;}
+  selDay=toN(e.target.value); weekStart=mondayOf(selDay); renderWeek(); renderBanner();});
+
+renderWeek();
+
+// task rows
+const rows = list => list.length ? list.map(t=>`
+  <div class="row"><span class="pri ${t.priority}"></span>
+    <div><div class="rt">${esc(t.title)}</div>
+    <div class="rmeta"><span>due ${fmtDue(t.due)}</span>
+      ${t.project?`<span class="tag">#${esc(t.project)}</span>`:''}
+      ${t.followup?`<span class="flw">↳ follow-up</span>`:''}</div></div>
+  </div>`).join('') : '<div class="empty">Nothing here. Nice.</div>';
+document.getElementById('overdue').innerHTML = rows(overdue);
+document.getElementById('dueToday').innerHTML = rows(dueToday);
+document.getElementById('thisWeek').innerHTML = rows(thisWeek);
+
+// followups
+document.getElementById('followups').innerHTML = D.followups.length? D.followups.map(f=>`
+  <div class="fl"><span class="who">${esc(f.who)}</span>
+    <span class="what">${esc(f.what)} <span class="tag mono">· ${esc(f.channel||'—')}</span></span>
+    <span class="when">${fmtDue(f.due)}</span></div>`).join('')
+  : '<div class="empty">No open follow-ups.</div>';
+
+// ideas
+document.getElementById('ideas').innerHTML = D.ideas.length? D.ideas.map(i=>`
+  <div class="idea"><div class="it">${esc(i.title)}</div>
+    <div class="inote">${esc(i.note||'')}</div>
+    <div class="icap">captured ${esc(i.captured||'')}</div></div>`).join('')
+  : '<div class="empty">Parking lot is empty.</div>';
+</script>
+</body>
+</html>
